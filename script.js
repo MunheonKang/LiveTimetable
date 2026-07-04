@@ -355,11 +355,25 @@ async function parsePDF(file) {
                     // 9:00 인 경우 09:00 으로 패딩
                     if (time.length === 4) time = '0' + time;
                     
-                    let label = evMatch[2].trim();
-                    // 멀티라인 캡처 중 포함될 수 있는 불필요한 하단 텍스트 잘라내기
-                    label = label.split(/\n\s*※|\n\s*■|\n\s*시간|\n\s*\n/)[0].trim();
-                    // 이벤트 설명이 여러 줄인 경우 한 줄로 합치기
-                    label = label.replace(/\n/g, ' ');
+                    let rawLabel = evMatch[2].trim();
+                    
+                    // 첫 줄(시간과 같은 줄에 있는 텍스트)은 무조건 일정 제목으로 사용
+                    let labelLines = rawLabel.split('\n');
+                    let cleanLabel = labelLines[0].trim();
+                    
+                    // 두 번째 줄부터는 부연 설명(글머리 기호나 괄호로 시작)일 경우에만 이어붙임
+                    for (let i = 1; i < labelLines.length; i++) {
+                        let l = labelLines[i].trim();
+                        // 일정의 부연 설명으로 인정할 시작 문자들 (ㆍ, -, *, [, (, < 등)
+                        if (/^[ㆍ\-*\[\(<※]/.test(l) && !l.startsWith('※')) {
+                            cleanLabel += ' ' + l;
+                        } else {
+                            // 부연 설명 기호로 시작하지 않으면 그 즉시 캡처 중단 (하단 쓰레기 텍스트 방어)
+                            break;
+                        }
+                    }
+                    
+                    let label = cleanLabel;
                     
                     if (label.length > 2 && !seenTimes.has(time)) {
                         let ts = 0;
