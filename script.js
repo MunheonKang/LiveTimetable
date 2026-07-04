@@ -1,6 +1,20 @@
 // 초기 타임테이블 데이터 (비어 있음)
 let timetable = [];
 
+async function checkLocalPDF() {
+    try {
+        const response = await fetch('schedule.pdf');
+        if (response.ok) {
+            const arrayBuffer = await response.arrayBuffer();
+            const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+            blob.name = 'schedule.pdf';
+            parsePDF(blob);
+        }
+    } catch (e) {
+        console.log("웹 서버에서 schedule.pdf를 찾을 수 없거나 로컬 환경입니다. (수동 드래그 필요)");
+    }
+}
+
 function init() {
     // 로컬 스토리지에서 저장된 시간표 불러오기
     const savedTimetable = localStorage.getItem('savedTimetable');
@@ -18,6 +32,10 @@ function init() {
 
     updateClock();
     setInterval(updateClock, 1000);
+    
+    // 웹 환경인 경우 자동으로 서버의 schedule.pdf 읽어오기 시도
+    checkLocalPDF();
+    
     renderTimetable();
     setupDropZone();
 }
