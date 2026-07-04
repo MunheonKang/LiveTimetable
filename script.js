@@ -114,13 +114,13 @@ function renderTimetable() {
             const li = document.createElement('li');
             li.className = 'event-item';
             
-            const timeSpan = document.createElement('span');
-            timeSpan.className = 'time';
-            timeSpan.textContent = event.time;
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'time';
+            timeDiv.textContent = event.endTime ? `${event.time} - ${event.endTime}` : event.time;
             
-            const labelSpan = document.createElement('span');
-            labelSpan.className = 'label';
-            labelSpan.textContent = event.label;
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'label';
+            labelDiv.textContent = event.label;
             
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-btn';
@@ -136,8 +136,8 @@ function renderTimetable() {
                 updateClock();
             };
             
-            li.appendChild(timeSpan);
-            li.appendChild(labelSpan);
+            li.appendChild(timeDiv);
+            li.appendChild(labelDiv);
             li.appendChild(deleteBtn);
             
             li.dataset.timestamp = event.timestamp || '';
@@ -341,21 +341,23 @@ async function parsePDF(file) {
         // 요일이 명시되지 않은 문서나 첫 요일 이전의 이벤트를 담기 위한 기본값
         let currentDayObj = { day: '일정', dateStr: '', isBlock: true };
 
-        // 09:00 뿐만 아니라 9:00 형식도 지원. (월) 등도 예외처리 추가.
-        const eventRegex = /([0-2]?[0-9]:[0-5][0-9])(?:-[0-2]?[0-9]:[0-5][0-9])?\s+((?:(?!(?:[0-2]?[0-9]:[0-5][0-9]|\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b|월요일|화요일|수요일|목요일|금요일|토요일|일요일|\([월화수목금토일]\)))[\s\S])+)/gi;
+        // 09:00 뿐만 아니라 9:00 형식도 지원. 종료 시간도 캡처 그룹으로 추가.
+        const eventRegex = /([0-2]?[0-9]:[0-5][0-9])(?:-([0-2]?[0-9]:[0-5][0-9]))?\s+((?:(?!(?:[0-2]?[0-9]:[0-5][0-9]|\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b|월요일|화요일|수요일|목요일|금요일|토요일|일요일|\([월화수목금토일]\)))[\s\S])+)/gi;
 
         for (const p of parts) {
             if (p.isBlock) {
                 currentDayObj = p;
             } else {
                 let evMatch;
-                const seenTimes = new Set();
                 while ((evMatch = eventRegex.exec(p.text)) !== null) {
                     let time = evMatch[1];
                     // 9:00 인 경우 09:00 으로 패딩
                     if (time.length === 4) time = '0' + time;
                     
-                    let rawLabel = evMatch[2].trim();
+                    let endTime = evMatch[2];
+                    if (endTime && endTime.length === 4) endTime = '0' + endTime;
+                    
+                    let rawLabel = evMatch[3].trim();
                     
                     // 첫 줄(시간과 같은 줄에 있는 텍스트)은 무조건 일정 제목으로 사용
                     let labelLines = rawLabel.split('\n');
@@ -375,7 +377,7 @@ async function parsePDF(file) {
                     
                     let label = cleanLabel;
                     
-                    if (label.length > 2 && !seenTimes.has(time)) {
+                    if (label.length > 2) {
                         let ts = 0;
                         if (currentDayObj.dateStr) {
                             let dateTimeStr = `${currentDayObj.dateStr} ${time}`;
@@ -394,10 +396,10 @@ async function parsePDF(file) {
                             day: displayDay,
                             dateStr: currentDayObj.dateStr,
                             time,
+                            endTime: endTime || '', // 종료 시간이 없으면 빈 문자열
                             label,
                             timestamp: ts
                         });
-                        seenTimes.add(time);
                     }
                 }
             }
