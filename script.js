@@ -226,7 +226,7 @@ async function parsePDF(file) {
             
             textContent.items.forEach(item => {
                 if (lastY !== -1 && Math.abs(item.transform[5] - lastY) > 5) {
-                    pageText += ' ';
+                    pageText += '\n'; // 줄바꿈 보존 (불필요한 다음 줄 내용 캡처 방지)
                 } else if (lastX !== -1 && (item.transform[4] - (lastX + lastWidth)) > 5) {
                     pageText += ' ';
                 }
