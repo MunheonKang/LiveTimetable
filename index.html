@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LiveTimetable</title>
+    <!-- Google Fonts: Inter for minimal look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- pdf.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+</head>
+<body>
+    <!-- 전체 화면을 드롭 영역으로 사용 -->
+    <div id="drop-zone" class="full-screen-drop">
+        <!-- 하단 드롭 안내 텍스트 -->
+        <div class="drop-indicator" id="drop-zone-text">Drag & Drop PDF Here</div>
+        
+        <div class="content-wrapper">
+            <!-- 왼쪽: 시계와 남은 시간 -->
+            <div class="left-content">
+                <div id="clock">00:00:00</div>
+                <div id="countdown">다음 일정까지 대기 중...</div>
+            </div>
+            
+            <!-- 오른쪽: 미니멀 타임테이블 -->
+            <div class="right-content">
+                <ul id="timetable-list" class="minimal-timetable">
+                    <!-- 일정이 여기에 동적으로 추가됩니다 -->
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
