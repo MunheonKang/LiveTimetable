@@ -79,7 +79,7 @@ body {
     font-weight: 200; 
     letter-spacing: -4px;
     line-height: 1;
-    margin-bottom: 10px; /* 간격 축소 */
+    margin-bottom: 35px; /* 시계 아래 공간 확보 */
     color: #ffffff;
     font-variant-numeric: tabular-nums; 
 }

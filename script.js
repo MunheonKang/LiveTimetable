@@ -77,7 +77,7 @@ function updateCountdown(now) {
         if (h > 0 || d > 0) timeStr += `${h}h `;
         timeStr += `${m}m ${s}s`;
         
-        countdownEl.innerHTML = `<span style="opacity:0.7; font-size:0.7em; text-transform:uppercase; display:block; margin-bottom:5px;">Next: ${nextEvent.label}</span>-${timeStr}`;
+        countdownEl.innerHTML = `-${timeStr}<span style="opacity:0.7; font-size:0.7em; text-transform:uppercase; display:block; margin-top:10px;">Next: ${nextEvent.label}</span>`;
     } else {
         countdownEl.innerHTML = ''; // 일정이 없으면 텍스트도 완전히 지움
     }
