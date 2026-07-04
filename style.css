@@ -161,7 +161,8 @@ body {
 .minimal-timetable li.event-item .time {
     font-weight: 600;
     color: #cccccc; /* 기존보다 밝게 변경 */
-    width: 55px;
+    width: 105px; /* 종료 시간 추가로 인해 공간 넉넉하게 확장 */
+    white-space: nowrap; /* 절대 줄바꿈 되지 않도록 설정 */
     flex-shrink: 0;
     padding-top: 2px;
 }
