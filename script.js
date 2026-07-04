@@ -219,24 +219,50 @@ async function parsePDF(file) {
             const page = await pdf.getPage(i);
             const textContent = await page.getTextContent();
             
-            let pageText = '';
-            let lastY = -1;
-            let lastX = -1;
-            let lastWidth = -1;
-            
-            textContent.items.forEach(item => {
-                if (lastY !== -1 && Math.abs(item.transform[5] - lastY) > 5) {
-                    pageText += '\n'; // 줄바꿈 보존 (타임테이블 아래쪽 불필요한 텍스트 병합 방지)
-                } else if (lastX !== -1 && (item.transform[4] - (lastX + lastWidth)) > 5) {
-                    pageText += ' ';
+            // 2D 좌표 기반의 정교한 텍스트 추출 (X, Y 정렬 알고리즘 도입)
+            const items = textContent.items.map(item => ({
+                text: item.str,
+                x: item.transform[4],
+                y: item.transform[5],
+                width: item.width
+            }));
+
+            // Y 좌표를 기준으로 오차범위(5px) 내에 있는 텍스트들을 같은 줄(Line)로 그룹화
+            const lines = [];
+            items.forEach(item => {
+                let foundLine = lines.find(line => Math.abs(line.y - item.y) < 5);
+                if (foundLine) {
+                    foundLine.items.push(item);
+                } else {
+                    lines.push({ y: item.y, items: [item] });
                 }
-                pageText += item.str;
-                lastX = item.transform[4];
-                lastY = item.transform[5];
-                lastWidth = item.width; 
+            });
+
+            // 위에서부터 아래로 읽도록 Y 좌표 내림차순 정렬 (PDF는 0이 화면 하단)
+            lines.sort((a, b) => b.y - a.y);
+
+            let pageText = '';
+            lines.forEach(line => {
+                // 같은 줄 안에서는 왼쪽에서 오른쪽으로 읽도록 X 좌표 오름차순 정렬
+                line.items.sort((a, b) => a.x - b.x);
+                
+                let lineText = '';
+                let lastX = -1;
+                let lastWidth = -1;
+                
+                line.items.forEach(item => {
+                    if (lastX !== -1 && (item.x - (lastX + lastWidth)) > 5) {
+                        lineText += ' ';
+                    }
+                    lineText += item.text;
+                    lastX = item.x;
+                    lastWidth = item.width;
+                });
+                
+                pageText += lineText + '\n';
             });
             
-            fullText += pageText + ' ';
+            fullText += pageText + '\n\n';
         }
 
         fullText = fullText.replace(/['"]/g, "'");
