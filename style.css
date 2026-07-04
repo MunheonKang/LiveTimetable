@@ -114,6 +114,7 @@ body {
     margin: 0;
     overflow-y: auto;
     padding-right: 15px;
+    user-select: none; /* 드래그 시 텍스트가 선택되는 것을 방지하여 부드러운 스크롤 보장 */
 }
 
 /* Custom Scrollbar */
