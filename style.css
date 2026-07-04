@@ -9,11 +9,14 @@
 body {
     margin: 0;
     padding: 0;
+    width: 100vw;
+    height: 100vh;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-main);
-    height: 100vh;
     overflow: hidden;
+    user-select: none; /* 화면 전체에서 텍스트 블록 선택 원천 차단 */
+    -webkit-user-select: none;
 }
 
 /* Make the whole screen a drop zone */
