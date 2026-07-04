@@ -316,7 +316,7 @@ async function parsePDF(file) {
         let currentDayObj = { day: '일정', dateStr: '', isBlock: true };
 
         // 09:00 뿐만 아니라 9:00 형식도 지원. (월) 등도 예외처리 추가.
-        const eventRegex = /([0-2]?[0-9]:[0-5][0-9])(?:-[0-2]?[0-9]:[0-5][0-9])?\s+((?:(?!(?:[0-2]?[0-9]:[0-5][0-9]|\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b|월요일|화요일|수요일|목요일|금요일|토요일|일요일|\([월화수목금토일]\))).)+)/gi;
+        const eventRegex = /([0-2]?[0-9]:[0-5][0-9])(?:-[0-2]?[0-9]:[0-5][0-9])?\s+((?:(?!(?:[0-2]?[0-9]:[0-5][0-9]|\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b|월요일|화요일|수요일|목요일|금요일|토요일|일요일|\([월화수목금토일]\)))[\s\S])+)/gi;
 
         for (const p of parts) {
             if (p.isBlock) {
@@ -330,6 +330,10 @@ async function parsePDF(file) {
                     if (time.length === 4) time = '0' + time;
                     
                     let label = evMatch[2].trim();
+                    // 멀티라인 캡처 중 포함될 수 있는 불필요한 하단 텍스트 잘라내기
+                    label = label.split(/\n\s*※|\n\s*■|\n\s*시간|\n\s*\n/)[0].trim();
+                    // 이벤트 설명이 여러 줄인 경우 한 줄로 합치기
+                    label = label.replace(/\n/g, ' ');
                     
                     if (label.length > 2 && !seenTimes.has(time)) {
                         let ts = 0;
