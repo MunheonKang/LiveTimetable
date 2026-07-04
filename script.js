@@ -178,6 +178,8 @@ function renderTimetable() {
     });
 }
 
+let lastScrolledEvent = null;
+
 function updateTimetableUI(currentTimestamp, nextEvent, now) {
     const listItems = document.querySelectorAll('#timetable-list li.event-item');
     listItems.forEach(li => {
@@ -198,11 +200,20 @@ function updateTimetableUI(currentTimestamp, nextEvent, now) {
             if (evTs <= currentTimestamp) {
                 li.classList.add('past');
             }
-            // nextEvent와 완전히 일치하는 요소 하이라이트
+            // nextEvent와 완전히 일치하는 요소 하이라이트 및 자동 스크롤
             if (nextEvent && (evTs === nextEvent.timestamp || evTs === nextEvent.fallbackTs)) {
                 // 정확도를 높이기 위해 시간 텍스트도 확인
                 if (li.dataset.time === nextEvent.time) {
                     li.classList.add('next');
+                    
+                    // 월페이퍼 엔진 환경을 위해 현재 진행 중인 이벤트가 항상 화면 중앙에 오도록 자동 스크롤
+                    if (lastScrolledEvent !== li) {
+                        lastScrolledEvent = li;
+                        // 약간의 딜레이를 주어 렌더링 후 스크롤되도록 함
+                        setTimeout(() => {
+                            li.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 100);
+                    }
                 }
             }
         }
