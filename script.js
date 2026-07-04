@@ -1,17 +1,28 @@
 // 초기 타임테이블 데이터 (비어 있음)
 let timetable = [];
 
+let lastPdfVersion = '';
 async function checkLocalPDF() {
     try {
-        const response = await fetch('schedule.pdf');
-        if (response.ok) {
-            const arrayBuffer = await response.arrayBuffer();
-            const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
-            blob.name = 'schedule.pdf';
-            parsePDF(blob);
+        // 캐시를 무시하고 서버의 최신 상태(헤더)만 먼저 확인
+        const headResponse = await fetch('schedule.pdf?t=' + Date.now(), { method: 'HEAD' });
+        if (headResponse.ok) {
+            const currentVersion = headResponse.headers.get('ETag') || headResponse.headers.get('Last-Modified');
+            
+            // 파일이 처음 로드되거나, 서버에서 파일이 변경된 경우에만 다운로드 및 파싱
+            if (currentVersion && currentVersion !== lastPdfVersion) {
+                lastPdfVersion = currentVersion;
+                const response = await fetch('schedule.pdf?t=' + Date.now());
+                if (response.ok) {
+                    const arrayBuffer = await response.arrayBuffer();
+                    const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+                    blob.name = 'schedule.pdf';
+                    parsePDF(blob);
+                }
+            }
         }
     } catch (e) {
-        console.log("웹 서버에서 schedule.pdf를 찾을 수 없거나 로컬 환경입니다. (수동 드래그 필요)");
+        console.log("웹 서버에서 schedule.pdf를 찾을 수 없거나 접근할 수 없습니다.");
     }
 }
 
@@ -33,8 +44,9 @@ function init() {
     updateClock();
     setInterval(updateClock, 1000);
     
-    // 웹 환경인 경우 자동으로 서버의 schedule.pdf 읽어오기 시도
+    // 웹 환경인 경우 처음에 읽어오고, 1분마다 서버의 파일 변경 여부를 감시 (자동 갱신)
     checkLocalPDF();
+    setInterval(checkLocalPDF, 60000);
     
     renderTimetable();
     setupDropZone();
