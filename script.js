@@ -50,6 +50,34 @@ function init() {
     
     renderTimetable();
     setupDropZone();
+    
+    // 월페이퍼 엔진 마우스 휠 스크롤 우회용 드래그 스크롤 기능
+    const timetableContainer = document.getElementById('timetable-list');
+    let isDown = false;
+    let startY;
+    let scrollTop;
+
+    timetableContainer.addEventListener('mousedown', (e) => {
+        isDown = true;
+        startY = e.pageY - timetableContainer.offsetTop;
+        scrollTop = timetableContainer.scrollTop;
+        timetableContainer.style.cursor = 'grabbing';
+    });
+    timetableContainer.addEventListener('mouseleave', () => {
+        isDown = false;
+        timetableContainer.style.cursor = 'default';
+    });
+    timetableContainer.addEventListener('mouseup', () => {
+        isDown = false;
+        timetableContainer.style.cursor = 'default';
+    });
+    timetableContainer.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const y = e.pageY - timetableContainer.offsetTop;
+        const walk = (y - startY) * 1.5;
+        timetableContainer.scrollTop = scrollTop - walk;
+    });
 }
 
 function updateClock() {
