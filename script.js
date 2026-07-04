@@ -330,7 +330,6 @@ async function parsePDF(file) {
                     if (time.length === 4) time = '0' + time;
                     
                     let label = evMatch[2].trim();
-                    if(label.length > 45) label = label.substring(0, 45) + '...';
                     
                     if (label.length > 2 && !seenTimes.has(time)) {
                         let ts = 0;
