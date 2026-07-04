@@ -226,7 +226,7 @@ async function parsePDF(file) {
             
             textContent.items.forEach(item => {
                 if (lastY !== -1 && Math.abs(item.transform[5] - lastY) > 5) {
-                    pageText += '\n'; // 줄바꿈 보존 (불필요한 다음 줄 내용 캡처 방지)
+                    pageText += '\n'; // 줄바꿈 보존 (타임테이블 아래쪽 불필요한 텍스트 병합 방지)
                 } else if (lastX !== -1 && (item.transform[4] - (lastX + lastWidth)) > 5) {
                     pageText += ' ';
                 }
@@ -239,8 +239,8 @@ async function parsePDF(file) {
             fullText += pageText + ' ';
         }
 
-        fullText = fullText.replace(/\?\?/g, "'");
-        fullText = fullText.replace(/\s+/g, ' ');
+        fullText = fullText.replace(/['"]/g, "'");
+        fullText = fullText.replace(/[ \t]+/g, ' '); // \n은 살려두고 연속된 공백만 하나로 축소
 
         const daysToNormalize = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         daysToNormalize.forEach(day => {
