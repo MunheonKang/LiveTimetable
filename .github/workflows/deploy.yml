@@ -22,13 +22,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
       - name: Install dependencies
         run: npm ci
@@ -41,9 +41,9 @@ jobs:
           git add schedule.txt
           git diff --quiet && git diff --staged --quiet || (git commit -m "chore: auto-generate schedule.txt from PDF" && git push origin main)
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: '.'
       - name: Deploy to GitHub Pages
