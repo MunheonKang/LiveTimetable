@@ -232,7 +232,8 @@ body {
         flex-direction: column;
         height: 100%;
         box-sizing: border-box;
-        padding: 30px 20px 60px 20px;
+        padding: 80px 20px 60px 20px; /* Fallback for older browsers */
+        padding: calc(env(safe-area-inset-top) + 60px) 20px 60px 20px;
         justify-content: flex-start;
         align-items: center;
         gap: 20px;
@@ -257,7 +258,7 @@ body {
     .right-content {
         flex: 1;
         width: 100%;
-        max-height: calc(100% - 160px); /* 남은 세로 공간 채우기 */
+        max-height: calc(100% - 210px); /* 남은 세로 공간 채우기 */
         display: flex;
         flex-direction: column;
     }
@@ -269,16 +270,12 @@ body {
     }
     
     .drop-indicator {
-        bottom: 15px;
-        font-size: 0.7rem;
-        letter-spacing: 2px;
-        width: 100%;
-        text-align: center;
+        display: none !important;
     }
     
-    /* 모바일에서는 호버가 없으므로 삭제 버튼을 기본 노출 */
+    /* 모바일에서는 파일 업로드 기능 비활성화로 삭제 버튼 비노출 (확인만 하도록) */
     .minimal-timetable li.event-item .delete-btn {
-        opacity: 0.6;
+        display: none !important;
     }
     
     /* 모바일용 일정 리스트 레이아웃 미세 조정 */

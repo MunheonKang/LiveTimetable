@@ -249,6 +249,16 @@ function updateTimetableUI(currentTimestamp, nextEvent, now) {
 }
 
 function setupDropZone() {
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) {
+        // 모바일인 경우 업로드 안내 텍스트 변경
+        const dropZoneText = document.getElementById('drop-zone-text');
+        if (dropZoneText) {
+            dropZoneText.style.display = 'none';
+        }
+        return; // 모바일에서는 파일 업로드 기능 비활성화
+    }
+
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
 
