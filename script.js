@@ -2,17 +2,72 @@
 let timetable = [];
 
 let lastPdfVersion = '';
-async function checkLocalPDF() {
+let lastTxtVersion = '';
+let lastLoadedSource = ''; // 'pdf' or 'txt'
+
+async function checkServerUpdates() {
     try {
-        // 캐시를 무시하고 서버의 최신 상태(헤더)만 먼저 확인
-        const headResponse = await fetch('schedule.pdf?t=' + Date.now(), { method: 'HEAD' });
-        if (headResponse.ok) {
-            const currentVersion = headResponse.headers.get('ETag') || headResponse.headers.get('Last-Modified');
-            
-            // 파일이 처음 로드되거나, 서버에서 파일이 변경된 경우에만 다운로드 및 파싱
-            if (currentVersion && currentVersion !== lastPdfVersion) {
-                lastPdfVersion = currentVersion;
-                const response = await fetch('schedule.pdf?t=' + Date.now());
+        const t = Date.now();
+        
+        // 1. schedule.txt와 schedule.pdf의 헤더 정보 가져오기
+        const [txtHead, pdfHead] = await Promise.all([
+            fetch('schedule.txt?t=' + t, { method: 'HEAD' }).catch(() => null),
+            fetch('schedule.pdf?t=' + t, { method: 'HEAD' }).catch(() => null)
+        ]);
+
+        let hasTxt = txtHead && txtHead.ok;
+        let hasPdf = pdfHead && pdfHead.ok;
+
+        if (!hasTxt && !hasPdf) {
+            console.log("서버에서 schedule.txt와 schedule.pdf를 모두 찾을 수 없습니다.");
+            return;
+        }
+
+        const txtVersion = hasTxt ? (txtHead.headers.get('ETag') || txtHead.headers.get('Last-Modified')) : '';
+        const pdfVersion = hasPdf ? (pdfHead.headers.get('ETag') || pdfHead.headers.get('Last-Modified')) : '';
+
+        // 수정 시간 비교용 날짜 변환
+        const txtMtime = hasTxt ? new Date(txtHead.headers.get('Last-Modified') || 0).getTime() : 0;
+        const pdfMtime = hasPdf ? new Date(pdfHead.headers.get('Last-Modified') || 0).getTime() : 0;
+
+        // 어느 파일을 로드할지 결정 (더 최신 파일 사용)
+        let sourceToLoad = '';
+        if (hasTxt && hasPdf) {
+            sourceToLoad = txtMtime >= pdfMtime ? 'txt' : 'pdf';
+        } else if (hasTxt) {
+            sourceToLoad = 'txt';
+        } else {
+            sourceToLoad = 'pdf';
+        }
+
+        // 버전 변경 여부 확인
+        let needsUpdate = false;
+        if (sourceToLoad === 'txt') {
+            if (txtVersion !== lastTxtVersion || lastLoadedSource !== 'txt') {
+                needsUpdate = true;
+            }
+        } else if (sourceToLoad === 'pdf') {
+            if (pdfVersion !== lastPdfVersion || lastLoadedSource !== 'pdf') {
+                needsUpdate = true;
+            }
+        }
+
+        if (needsUpdate) {
+            lastTxtVersion = txtVersion;
+            lastPdfVersion = pdfVersion;
+            lastLoadedSource = sourceToLoad;
+
+            if (sourceToLoad === 'txt') {
+                console.log("schedule.txt 로드 중 (더 최신이거나 유일한 소스)...");
+                const response = await fetch('schedule.txt?t=' + t);
+                if (response.ok) {
+                    const text = await response.text();
+                    const newTimetable = processParsedText(text);
+                    updateTimetableData(newTimetable, '텍스트 파일(schedule.txt)에서 일정을 불러왔습니다.');
+                }
+            } else {
+                console.log("schedule.pdf 로드 중 (더 최신이거나 유일한 소스)...");
+                const response = await fetch('schedule.pdf?t=' + t);
                 if (response.ok) {
                     const arrayBuffer = await response.arrayBuffer();
                     const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
@@ -22,7 +77,7 @@ async function checkLocalPDF() {
             }
         }
     } catch (e) {
-        console.log("웹 서버에서 schedule.pdf를 찾을 수 없거나 접근할 수 없습니다.");
+        console.error("서버 데이터 동기화 감시 중 에러:", e);
     }
 }
 
@@ -45,8 +100,8 @@ function init() {
     setInterval(updateClock, 1000);
     
     // 웹 환경인 경우 처음에 읽어오고, 1분마다 서버의 파일 변경 여부를 감시 (자동 갱신)
-    checkLocalPDF();
-    setInterval(checkLocalPDF, 60000);
+    checkServerUpdates();
+    setInterval(checkServerUpdates, 60000);
     
     renderTimetable();
     setupDropZone();
@@ -313,9 +368,161 @@ function setupDropZone() {
     });
 }
 
+function processParsedText(fullText) {
+    fullText = fullText.replace(/['"]/g, "'");
+    fullText = fullText.replace(/[ \t]+/g, ' '); // \n은 살려두고 연속된 공백만 하나로 축소
+
+    const daysToNormalize = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    daysToNormalize.forEach(day => {
+        const spacedDayRegex = new RegExp(day.split('').join('\\s*'), 'gi');
+        fullText = fullText.replace(spacedDayRegex, day);
+    });
+
+    fullText = fullText.replace(/(\d{1,2})\s*(\d{2})\s*:\s*(\d{2})\s*(\d{2})/g, '$1$2:$3$4');
+    fullText = fullText.replace(/(\d{1,2}:\d{2})\s*[-~]\s*(\d{1,2}:\d{2})/g, '$1-$2');
+
+    const dateDayRegexEn = /(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/gi;
+    const dateDayRegexKo = /(\d{1,2})\s*월\s*(\d{1,2})\s*일\s*\((월|화|수|목|금|토|일)\)/g;
+    const fallbackDayRegex = /(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|월요일|화요일|수요일|목요일|금요일|토요일|일요일|\(월\)|\(화\)|\(수\)|\(목\)|\(금\)|\(토\)|\(일\))/gi;
+
+    let parts = [];
+    let hasDates = false;
+    const dateMatches = [];
+    
+    let matchEn;
+    while ((matchEn = dateDayRegexEn.exec(fullText)) !== null) {
+        dateMatches.push({
+            index: matchEn.index,
+            length: matchEn[0].length,
+            day: matchEn[1],
+            dateStr: `${matchEn[2]} ${matchEn[3]} ${matchEn[4]}`
+        });
+    }
+    
+    let matchKo;
+    while ((matchKo = dateDayRegexKo.exec(fullText)) !== null) {
+        const currentYear = new Date().getFullYear();
+        const dayMap = { '월': 'Monday', '화': 'Tuesday', '수': 'Wednesday', '목': 'Thursday', '금': 'Friday', '토': 'Saturday', '일': 'Sunday' };
+        dateMatches.push({
+            index: matchKo.index,
+            length: matchKo[0].length,
+            day: dayMap[matchKo[3]] || matchKo[3],
+            dateStr: `${currentYear}-${matchKo[1].padStart(2, '0')}-${matchKo[2].padStart(2, '0')}`
+        });
+    }
+
+    dateMatches.sort((a, b) => a.index - b.index);
+
+    let lastIdx = 0;
+    if (dateMatches.length > 0) {
+        hasDates = true;
+        for (const m of dateMatches) {
+            parts.push({ text: fullText.substring(lastIdx, m.index), isBlock: false });
+            parts.push({ day: m.day, dateStr: m.dateStr, isBlock: true });
+            lastIdx = m.index + m.length;
+        }
+        parts.push({ text: fullText.substring(lastIdx), isBlock: false });
+    }
+
+    if (!hasDates) {
+        lastIdx = 0;
+        let matchDay;
+        while ((matchDay = fallbackDayRegex.exec(fullText)) !== null) {
+            let dayName = matchDay[1];
+            if (dayName.startsWith('(')) {
+                const d = dayName.charAt(1);
+                const dayMap = { '월': 'Monday', '화': 'Tuesday', '수': 'Wednesday', '목': 'Thursday', '금': 'Friday', '토': 'Saturday', '일': 'Sunday' };
+                dayName = dayMap[d] || dayName;
+            }
+            parts.push({ text: fullText.substring(lastIdx, matchDay.index), isBlock: false });
+            parts.push({ day: dayName, dateStr: '', isBlock: true });
+            lastIdx = fallbackDayRegex.lastIndex;
+        }
+        parts.push({ text: fullText.substring(lastIdx), isBlock: false });
+    }
+
+    const newTimetable = [];
+    let currentDayObj = { day: '일정', dateStr: '', isBlock: true };
+
+    const eventRegex = /([0-2]?[0-9]:[0-5][0-9])(?:-([0-2]?[0-9]:[0-5][0-9]))?\s+((?:(?!(?:[0-2]?[0-9]:[0-5][0-9]|\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b|월요일|화요일|수요일|목요일|금요일|토요일|일요일|\([월화수목금토일]\)))[\s\S])+)/gi;
+
+    for (const p of parts) {
+        if (p.isBlock) {
+            currentDayObj = p;
+        } else {
+            let evMatch;
+            while ((evMatch = eventRegex.exec(p.text)) !== null) {
+                let time = evMatch[1];
+                if (time.length === 4) time = '0' + time;
+                
+                let endTime = evMatch[2];
+                if (endTime && endTime.length === 4) endTime = '0' + endTime;
+                
+                let rawLabel = evMatch[3].trim();
+                let labelLines = rawLabel.split('\n');
+                let cleanLabel = labelLines[0].trim();
+                
+                for (let i = 1; i < labelLines.length; i++) {
+                    let l = labelLines[i].trim();
+                    if (/^[ㆍ\-*\[\(<※]/.test(l) && !l.startsWith('※')) {
+                        cleanLabel += ' ' + l;
+                    } else {
+                        break;
+                    }
+                }
+                
+                let label = cleanLabel;
+                
+                if (label.length > 2) {
+                    let ts = 0;
+                    if (currentDayObj.dateStr) {
+                        let dateTimeStr = `${currentDayObj.dateStr} ${time}`;
+                        if (currentDayObj.dateStr.includes('-')) {
+                            dateTimeStr = `${currentDayObj.dateStr}T${time}:00`;
+                        }
+                        ts = new Date(dateTimeStr).getTime();
+                    }
+                    
+                    let displayDay = currentDayObj.day;
+                    if (/^[a-zA-Z]+$/.test(displayDay)) {
+                        displayDay = displayDay.charAt(0).toUpperCase() + displayDay.slice(1).toLowerCase();
+                    }
+                    
+                    newTimetable.push({
+                        day: displayDay,
+                        dateStr: currentDayObj.dateStr,
+                        time,
+                        endTime: endTime || '',
+                        label,
+                        timestamp: ts
+                    });
+                }
+            }
+        }
+    }
+    return newTimetable;
+}
+
+function updateTimetableData(newTimetable, successMessage) {
+    const dropZoneText = document.getElementById('drop-zone-text');
+    if (newTimetable && newTimetable.length > 0) {
+        timetable = newTimetable;
+        localStorage.setItem('savedTimetable', JSON.stringify(timetable));
+        renderTimetable();
+        updateClock();
+        if (dropZoneText) {
+            dropZoneText.innerHTML = successMessage + '<br>시간표 업데이트 및 저장 완료';
+        }
+    } else {
+        if (dropZoneText) {
+            dropZoneText.innerHTML = '일정을 찾지 못했습니다. 형식을 확인해 주세요.';
+        }
+    }
+}
+
 async function parsePDF(file) {
     const dropZoneText = document.getElementById('drop-zone-text');
-    dropZoneText.textContent = 'PDF 분석 중...';
+    if (dropZoneText) dropZoneText.textContent = 'PDF 분석 중...';
     
     try {
         const arrayBuffer = await file.arrayBuffer();
@@ -326,7 +533,6 @@ async function parsePDF(file) {
             const page = await pdf.getPage(i);
             const textContent = await page.getTextContent();
             
-            // 2D 좌표 기반의 정교한 텍스트 추출 (X, Y 정렬 알고리즘 도입)
             const items = textContent.items.map(item => ({
                 text: item.str,
                 x: item.transform[4],
@@ -334,7 +540,6 @@ async function parsePDF(file) {
                 width: item.width
             }));
 
-            // Y 좌표를 기준으로 오차범위(5px) 내에 있는 텍스트들을 같은 줄(Line)로 그룹화
             const lines = [];
             items.forEach(item => {
                 let foundLine = lines.find(line => Math.abs(line.y - item.y) < 5);
@@ -345,12 +550,10 @@ async function parsePDF(file) {
                 }
             });
 
-            // 위에서부터 아래로 읽도록 Y 좌표 내림차순 정렬 (PDF는 0이 화면 하단)
             lines.sort((a, b) => b.y - a.y);
 
             let pageText = '';
             lines.forEach(line => {
-                // 같은 줄 안에서는 왼쪽에서 오른쪽으로 읽도록 X 좌표 오름차순 정렬
                 line.items.sort((a, b) => a.x - b.x);
                 
                 let lineText = '';
@@ -372,159 +575,11 @@ async function parsePDF(file) {
             fullText += pageText + '\n\n';
         }
 
-        fullText = fullText.replace(/['"]/g, "'");
-        fullText = fullText.replace(/[ \t]+/g, ' '); // \n은 살려두고 연속된 공백만 하나로 축소
-
-        const daysToNormalize = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        daysToNormalize.forEach(day => {
-            const spacedDayRegex = new RegExp(day.split('').join('\\s*'), 'gi');
-            fullText = fullText.replace(spacedDayRegex, day);
-        });
-
-        fullText = fullText.replace(/(\d{1,2})\s*(\d{2})\s*:\s*(\d{2})\s*(\d{2})/g, '$1$2:$3$4');
-        fullText = fullText.replace(/(\d{1,2}:\d{2})\s*[-~]\s*(\d{1,2}:\d{2})/g, '$1-$2');
-
-        const dateDayRegexEn = /(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/gi;
-        const dateDayRegexKo = /(\d{1,2})\s*월\s*(\d{1,2})\s*일\s*\((월|화|수|목|금|토|일)\)/g;
-        const fallbackDayRegex = /(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|월요일|화요일|수요일|목요일|금요일|토요일|일요일|\(월\)|\(화\)|\(수\)|\(목\)|\(금\)|\(토\)|\(일\))/gi;
-
-        let parts = [];
-        let hasDates = false;
-        const dateMatches = [];
-        
-        let matchEn;
-        while ((matchEn = dateDayRegexEn.exec(fullText)) !== null) {
-            dateMatches.push({
-                index: matchEn.index,
-                length: matchEn[0].length,
-                day: matchEn[1],
-                dateStr: `${matchEn[2]} ${matchEn[3]} ${matchEn[4]}`
-            });
-        }
-        
-        let matchKo;
-        while ((matchKo = dateDayRegexKo.exec(fullText)) !== null) {
-            const currentYear = new Date().getFullYear();
-            const dayMap = { '월': 'Monday', '화': 'Tuesday', '수': 'Wednesday', '목': 'Thursday', '금': 'Friday', '토': 'Saturday', '일': 'Sunday' };
-            dateMatches.push({
-                index: matchKo.index,
-                length: matchKo[0].length,
-                day: dayMap[matchKo[3]] || matchKo[3],
-                dateStr: `${currentYear}-${matchKo[1].padStart(2, '0')}-${matchKo[2].padStart(2, '0')}`
-            });
-        }
-
-        dateMatches.sort((a, b) => a.index - b.index);
-
-        let lastIdx = 0;
-        if (dateMatches.length > 0) {
-            hasDates = true;
-            for (const m of dateMatches) {
-                parts.push({ text: fullText.substring(lastIdx, m.index), isBlock: false });
-                parts.push({ day: m.day, dateStr: m.dateStr, isBlock: true });
-                lastIdx = m.index + m.length;
-            }
-            parts.push({ text: fullText.substring(lastIdx), isBlock: false });
-        }
-
-        if (!hasDates) {
-            lastIdx = 0;
-            let matchDay;
-            while ((matchDay = fallbackDayRegex.exec(fullText)) !== null) {
-                let dayName = matchDay[1];
-                if (dayName.startsWith('(')) {
-                    const d = dayName.charAt(1);
-                    const dayMap = { '월': 'Monday', '화': 'Tuesday', '수': 'Wednesday', '목': 'Thursday', '금': 'Friday', '토': 'Saturday', '일': 'Sunday' };
-                    dayName = dayMap[d] || dayName;
-                }
-                parts.push({ text: fullText.substring(lastIdx, matchDay.index), isBlock: false });
-                parts.push({ day: dayName, dateStr: '', isBlock: true });
-                lastIdx = fallbackDayRegex.lastIndex;
-            }
-            parts.push({ text: fullText.substring(lastIdx), isBlock: false });
-        }
-
-        const newTimetable = [];
-        // 요일이 명시되지 않은 문서나 첫 요일 이전의 이벤트를 담기 위한 기본값
-        let currentDayObj = { day: '일정', dateStr: '', isBlock: true };
-
-        // 09:00 뿐만 아니라 9:00 형식도 지원. 종료 시간도 캡처 그룹으로 추가.
-        const eventRegex = /([0-2]?[0-9]:[0-5][0-9])(?:-([0-2]?[0-9]:[0-5][0-9]))?\s+((?:(?!(?:[0-2]?[0-9]:[0-5][0-9]|\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b|월요일|화요일|수요일|목요일|금요일|토요일|일요일|\([월화수목금토일]\)))[\s\S])+)/gi;
-
-        for (const p of parts) {
-            if (p.isBlock) {
-                currentDayObj = p;
-            } else {
-                let evMatch;
-                while ((evMatch = eventRegex.exec(p.text)) !== null) {
-                    let time = evMatch[1];
-                    // 9:00 인 경우 09:00 으로 패딩
-                    if (time.length === 4) time = '0' + time;
-                    
-                    let endTime = evMatch[2];
-                    if (endTime && endTime.length === 4) endTime = '0' + endTime;
-                    
-                    let rawLabel = evMatch[3].trim();
-                    
-                    // 첫 줄(시간과 같은 줄에 있는 텍스트)은 무조건 일정 제목으로 사용
-                    let labelLines = rawLabel.split('\n');
-                    let cleanLabel = labelLines[0].trim();
-                    
-                    // 두 번째 줄부터는 부연 설명(글머리 기호나 괄호로 시작)일 경우에만 이어붙임
-                    for (let i = 1; i < labelLines.length; i++) {
-                        let l = labelLines[i].trim();
-                        // 일정의 부연 설명으로 인정할 시작 문자들 (ㆍ, -, *, [, (, < 등)
-                        if (/^[ㆍ\-*\[\(<※]/.test(l) && !l.startsWith('※')) {
-                            cleanLabel += ' ' + l;
-                        } else {
-                            // 부연 설명 기호로 시작하지 않으면 그 즉시 캡처 중단 (하단 쓰레기 텍스트 방어)
-                            break;
-                        }
-                    }
-                    
-                    let label = cleanLabel;
-                    
-                    if (label.length > 2) {
-                        let ts = 0;
-                        if (currentDayObj.dateStr) {
-                            let dateTimeStr = `${currentDayObj.dateStr} ${time}`;
-                            if (currentDayObj.dateStr.includes('-')) {
-                                dateTimeStr = `${currentDayObj.dateStr}T${time}:00`;
-                            }
-                            ts = new Date(dateTimeStr).getTime();
-                        }
-                        
-                        let displayDay = currentDayObj.day;
-                        if (/^[a-zA-Z]+$/.test(displayDay)) {
-                            displayDay = displayDay.charAt(0).toUpperCase() + displayDay.slice(1).toLowerCase();
-                        }
-                        
-                        newTimetable.push({
-                            day: displayDay,
-                            dateStr: currentDayObj.dateStr,
-                            time,
-                            endTime: endTime || '', // 종료 시간이 없으면 빈 문자열
-                            label,
-                            timestamp: ts
-                        });
-                    }
-                }
-            }
-        }
-        
-        if (newTimetable.length > 0) {
-            timetable = newTimetable;
-            // 새롭게 추가된 타임테이블을 로컬 스토리지에 저장 (새로고침 유지용)
-            localStorage.setItem('savedTimetable', JSON.stringify(timetable));
-            renderTimetable();
-            updateClock();
-            dropZoneText.innerHTML = '시간표 업데이트 및 저장 완료 (다른 PDF 드롭/터치 가능)';
-        } else {
-            dropZoneText.innerHTML = 'PDF에서 일정을 찾지 못했습니다. 다시 시도해 주세요.';
-        }
+        const newTimetable = processParsedText(fullText);
+        updateTimetableData(newTimetable, 'PDF 파일에서 일정을 불러왔습니다.');
     } catch (err) {
         console.error('PDF 파싱 에러:', err);
-        dropZoneText.textContent = 'PDF 분석 중 오류가 발생했습니다.';
+        if (dropZoneText) dropZoneText.textContent = 'PDF 분석 중 오류가 발생했습니다.';
     }
 }
 
