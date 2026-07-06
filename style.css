@@ -273,9 +273,9 @@ body {
         display: none !important;
     }
     
-    /* 모바일에서는 파일 업로드 기능 비활성화로 삭제 버튼 비노출 (확인만 하도록) */
+    /* 모바일에서는 호버가 없으므로 삭제 버튼을 기본 노출 */
     .minimal-timetable li.event-item .delete-btn {
-        display: none !important;
+        opacity: 0.6;
     }
     
     /* 모바일용 일정 리스트 레이아웃 미세 조정 */
