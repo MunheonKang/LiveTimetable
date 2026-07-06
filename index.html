@@ -18,8 +18,10 @@
 <body>
     <!-- 전체 화면을 드롭 영역으로 사용 -->
     <div id="drop-zone" class="full-screen-drop">
+        <!-- 모바일 및 클릭 업로드를 위한 파일 인풋 -->
+        <input type="file" id="file-input" accept="application/pdf" style="display: none;">
         <!-- 하단 드롭 안내 텍스트 -->
-        <div class="drop-indicator" id="drop-zone-text">Drag & Drop PDF Here</div>
+        <div class="drop-indicator" id="drop-zone-text">Drag & Drop or Tap to Upload PDF</div>
         
         <div class="content-wrapper">
             <!-- 왼쪽: 시계와 남은 시간 -->

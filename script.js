@@ -34,7 +34,7 @@ function init() {
             timetable = JSON.parse(savedTimetable);
             const dropZoneText = document.getElementById('drop-zone-text');
             if (dropZoneText) {
-                dropZoneText.innerHTML = '저장된 시간표를 불러왔습니다.<br>새 PDF를 드롭하여 변경할 수 있습니다.';
+                dropZoneText.innerHTML = '저장된 시간표를 불러왔습니다.<br>새 PDF를 드롭하거나 터치(클릭)하여 변경할 수 있습니다.';
             }
         } catch (e) {
             console.error('저장된 시간표 로드 중 에러:', e);
@@ -250,6 +250,34 @@ function updateTimetableUI(currentTimestamp, nextEvent, now) {
 
 function setupDropZone() {
     const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                const file = e.target.files[0];
+                if (file.type === 'application/pdf') {
+                    parsePDF(file);
+                } else {
+                    alert('PDF 파일만 지원합니다.');
+                }
+            }
+        });
+    }
+
+    dropZone.addEventListener('click', (e) => {
+        // 우측 시간표나 삭제 버튼 등 인터랙티브 요소 클릭 시 작동 방지
+        const rightContent = document.querySelector('.right-content');
+        if (rightContent && rightContent.contains(e.target)) {
+            return;
+        }
+        if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+            return;
+        }
+        if (fileInput) {
+            fileInput.click();
+        }
+    });
 
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -480,7 +508,7 @@ async function parsePDF(file) {
             localStorage.setItem('savedTimetable', JSON.stringify(timetable));
             renderTimetable();
             updateClock();
-            dropZoneText.innerHTML = '시간표 업데이트 및 저장 완료 (다른 PDF 드롭 가능)';
+            dropZoneText.innerHTML = '시간표 업데이트 및 저장 완료 (다른 PDF 드롭/터치 가능)';
         } else {
             dropZoneText.innerHTML = 'PDF에서 일정을 찾지 못했습니다. 다시 시도해 주세요.';
         }
