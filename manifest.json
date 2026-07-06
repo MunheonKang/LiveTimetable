@@ -1,0 +1,17 @@
+{
+  "name": "Live Timetable",
+  "short_name": "LiveTimetable",
+  "description": "실시간 시간표 및 남은 시간 카운트다운",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#080808",
+  "theme_color": "#080808",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
