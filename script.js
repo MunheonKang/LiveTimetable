@@ -89,7 +89,7 @@ function init() {
             timetable = JSON.parse(savedTimetable);
             const dropZoneText = document.getElementById('drop-zone-text');
             if (dropZoneText) {
-                dropZoneText.innerHTML = '저장된 시간표를 불러왔습니다.<br>새 PDF를 드롭하거나 터치(클릭)하여 변경할 수 있습니다.';
+                dropZoneText.innerHTML = '저장된 시간표를 불러왔습니다.<br>새 PDF를 드래그 앤 드롭하여 변경할 수 있습니다.';
             }
         } catch (e) {
             console.error('저장된 시간표 로드 중 에러:', e);
@@ -329,20 +329,6 @@ function setupDropZone() {
             }
         });
     }
-
-    dropZone.addEventListener('click', (e) => {
-        // 우측 시간표나 삭제 버튼 등 인터랙티브 요소 클릭 시 작동 방지
-        const rightContent = document.querySelector('.right-content');
-        if (rightContent && rightContent.contains(e.target)) {
-            return;
-        }
-        if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
-            return;
-        }
-        if (fileInput) {
-            fileInput.click();
-        }
-    });
 
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
