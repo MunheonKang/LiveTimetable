@@ -151,34 +151,76 @@ function updateClock() {
 function updateCountdown(now) {
     const currentTimestamp = now.getTime();
     
+    let currentEvent = null;
+    let currentEventEndDiff = Infinity;
+    
     let nextEvent = null;
     let nextEventDiff = Infinity;
 
     for (const event of timetable) {
-        if (event.timestamp) {
-            // 정확한 날짜가 파싱된 경우 절대 시간 비교
-            const diffSeconds = Math.floor((event.timestamp - currentTimestamp) / 1000);
-            if (diffSeconds > 0 && diffSeconds < nextEventDiff) {
-                nextEvent = event;
-                nextEventDiff = diffSeconds;
-            }
-        } else {
-            // 날짜가 없는 경우 (오늘 날짜라고 가정하고 임시 비교)
+        let startTs = event.timestamp;
+        let endTs = 0;
+        
+        if (!startTs) {
+            // fallback timestamp 계산
             const todayStr = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][now.getDay()];
             if (event.day === todayStr || event.day === 'Today') {
                 const [h, m] = event.time.split(':').map(Number);
-                const evTs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m).getTime();
-                const diffSeconds = Math.floor((evTs - currentTimestamp) / 1000);
-                if (diffSeconds > 0 && diffSeconds < nextEventDiff) {
-                    nextEvent = event;
-                    nextEventDiff = diffSeconds;
-                    nextEvent.fallbackTs = evTs; // 임시 타임스탬프 저장
+                startTs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m).getTime();
+                event.fallbackTs = startTs; // 임시 타임스탬프 저장
+                
+                if (event.endTime) {
+                    const [eh, em] = event.endTime.split(':').map(Number);
+                    endTs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), eh, em).getTime();
+                    event.fallbackEndTs = endTs;
                 }
+            }
+        } else {
+            if (event.endTime) {
+                let dateTimeStr = `${event.dateStr} ${event.endTime}`;
+                if (event.dateStr.includes('-')) {
+                    dateTimeStr = `${event.dateStr}T${event.endTime}:00`;
+                }
+                endTs = new Date(dateTimeStr).getTime();
+            }
+        }
+
+        if (startTs) {
+            // 1. 진행 중인 일정 확인 (시작 시각 이후이며 종료 시각 미만인 경우)
+            if (endTs && currentTimestamp >= startTs && currentTimestamp < endTs) {
+                currentEvent = event;
+                currentEventEndDiff = Math.floor((endTs - currentTimestamp) / 1000);
+            }
+            
+            // 2. 다음 일정 확인
+            const diffSeconds = Math.floor((startTs - currentTimestamp) / 1000);
+            if (diffSeconds > 0 && diffSeconds < nextEventDiff) {
+                nextEvent = event;
+                nextEventDiff = diffSeconds;
             }
         }
     }
 
     const countdownEl = document.getElementById('countdown');
+    let htmlContent = '';
+
+    // 진행 중인 일정이 있는 경우
+    if (currentEvent && currentEventEndDiff !== Infinity) {
+        const h = Math.floor(currentEventEndDiff / 3600);
+        const m = Math.floor((currentEventEndDiff % 3600) / 60);
+        const s = currentEventEndDiff % 60;
+        
+        let timeStr = '';
+        if (h > 0) timeStr += `${h}h `;
+        timeStr += `${m}m ${s}s`;
+        
+        htmlContent += `<div class="current-event-countdown" style="margin-bottom: 25px;">
+            <span style="opacity:0.6; font-size:0.65em; text-transform:uppercase; display:block; margin-bottom:5px; letter-spacing: 1px;">ONGOING: ${currentEvent.label}</span>
+            <span style="font-size:2.2rem; font-weight:600; color:var(--danger); display:block; letter-spacing: -1px;">-${timeStr}</span>
+        </div>`;
+    }
+
+    // 다음 일정이 있는 경우
     if (nextEvent) {
         const d = Math.floor(nextEventDiff / (24 * 3600));
         const h = Math.floor((nextEventDiff % (24 * 3600)) / 3600);
@@ -190,12 +232,24 @@ function updateCountdown(now) {
         if (h > 0 || d > 0) timeStr += `${h}h `;
         timeStr += `${m}m ${s}s`;
         
-        countdownEl.innerHTML = `-${timeStr}<span style="opacity:0.7; font-size:0.7em; text-transform:uppercase; display:block; margin-top:10px;">Next: ${nextEvent.label}</span>`;
-    } else {
-        countdownEl.innerHTML = ''; // 일정이 없으면 텍스트도 완전히 지움
+        // 진행 중인 일정이 있는 경우 폰트 크기 및 간격을 약간 축소하여 밸런스 유지
+        const nextFontSize = currentEvent ? '1.4rem' : '2.2rem';
+        const nextLetterSpacing = currentEvent ? '0px' : '-1px';
+        const labelSize = currentEvent ? '0.6em' : '0.65em';
+        
+        htmlContent += `<div class="next-event-countdown">
+            <span style="opacity:0.6; font-size:${labelSize}; text-transform:uppercase; display:block; margin-bottom:5px; letter-spacing: 1px;">NEXT: ${nextEvent.label}</span>
+            <span style="font-size:${nextFontSize}; font-weight:600; display:block; color:var(--accent); letter-spacing: ${nextLetterSpacing};">-${timeStr}</span>
+        </div>`;
+    }
+
+    countdownEl.innerHTML = htmlContent;
+    
+    if (!currentEvent && !nextEvent) {
+        countdownEl.innerHTML = '<span style="opacity:0.5; font-size:0.9rem; text-transform:uppercase; letter-spacing: 2px;">대기 중인 일정이 없습니다.</span>';
     }
     
-    updateTimetableUI(currentTimestamp, nextEvent, now);
+    updateTimetableUI(currentTimestamp, nextEvent, now, currentEvent);
 }
 
 function renderTimetable() {
@@ -263,7 +317,7 @@ function renderTimetable() {
 
 let lastScrolledEvent = null;
 
-function updateTimetableUI(currentTimestamp, nextEvent, now) {
+function updateTimetableUI(currentTimestamp, nextEvent, now, currentEvent) {
     const listItems = document.querySelectorAll('#timetable-list li.event-item');
     listItems.forEach(li => {
         let evTs = parseInt(li.dataset.timestamp);
@@ -277,22 +331,38 @@ function updateTimetableUI(currentTimestamp, nextEvent, now) {
             }
         }
         
-        li.classList.remove('past', 'next');
+        li.classList.remove('past', 'next', 'ongoing');
         
         if (evTs) {
-            if (evTs <= currentTimestamp) {
+            let isOngoing = false;
+            if (currentEvent) {
+                const isMatchingTs = evTs === currentEvent.timestamp || evTs === currentEvent.fallbackTs;
+                if (isMatchingTs && li.dataset.time === currentEvent.time) {
+                    isOngoing = true;
+                }
+            }
+
+            if (isOngoing) {
+                li.classList.add('ongoing');
+                
+                // 진행 중인 이벤트가 있으면 최우선으로 스크롤 타겟팅
+                if (lastScrolledEvent !== li) {
+                    lastScrolledEvent = li;
+                    setTimeout(() => {
+                        li.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+                }
+            } else if (evTs <= currentTimestamp) {
                 li.classList.add('past');
             }
-            // nextEvent와 완전히 일치하는 요소 하이라이트 및 자동 스크롤
+            
+            // nextEvent와 완전히 일치하는 요소 하이라이트 및 자동 스크롤 (진행 중인 이벤트가 없을 때만 스크롤)
             if (nextEvent && (evTs === nextEvent.timestamp || evTs === nextEvent.fallbackTs)) {
-                // 정확도를 높이기 위해 시간 텍스트도 확인
                 if (li.dataset.time === nextEvent.time) {
                     li.classList.add('next');
                     
-                    // 월페이퍼 엔진 환경을 위해 현재 진행 중인 이벤트가 항상 화면 중앙에 오도록 자동 스크롤
-                    if (lastScrolledEvent !== li) {
+                    if (!currentEvent && lastScrolledEvent !== li) {
                         lastScrolledEvent = li;
-                        // 약간의 딜레이를 주어 렌더링 후 스크롤되도록 함
                         setTimeout(() => {
                             li.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }, 100);

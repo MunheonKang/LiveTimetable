@@ -222,6 +222,26 @@ body {
     font-weight: 600;
 }
 
+/* Ongoing Event Focus with pulse animation */
+@keyframes pulse-ongoing {
+    0% { background: rgba(248, 113, 113, 0.06); }
+    50% { background: rgba(248, 113, 113, 0.16); }
+    100% { background: rgba(248, 113, 113, 0.06); }
+}
+
+.minimal-timetable li.event-item.ongoing {
+    background: rgba(248, 113, 113, 0.1);
+    border-left: 3px solid var(--danger);
+    transform: scale(1.02);
+    animation: pulse-ongoing 2s infinite ease-in-out;
+}
+.minimal-timetable li.event-item.ongoing .time {
+    color: var(--danger);
+}
+.minimal-timetable li.event-item.ongoing .label {
+    font-weight: 600;
+}
+
 /* Responsive design for Mobile/Tablet */
 @media (max-width: 900px) {
     body {
