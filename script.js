@@ -5,6 +5,20 @@ let lastPdfVersion = '';
 let lastTxtVersion = '';
 let lastLoadedSource = ''; // 'pdf' or 'txt'
 
+const defaultSettings = {
+    clock24h: true,
+    showSeconds: true,
+    accentColor: '#60a5fa',
+    dangerColor: '#f87171',
+    bgColor: '#080808',
+    textColor: '#f5f5f5',
+    clockSize: 7.0,
+    timetableSize: 1.0,
+    showDeleteBtn: true,
+    autoScroll: true
+};
+let settings = { ...defaultSettings };
+
 async function checkServerUpdates() {
     try {
         const t = Date.now();
@@ -82,6 +96,10 @@ async function checkServerUpdates() {
 }
 
 function init() {
+    loadSettings();
+    applySettings();
+    initSettingsUI();
+
     // 로컬 스토리지에서 저장된 시간표 불러오기
     const savedTimetable = localStorage.getItem('savedTimetable');
     if (savedTimetable) {
@@ -139,10 +157,18 @@ function updateClock() {
     const now = new Date();
     
     // 실시간 시계 업데이트
-    const hours = String(now.getHours()).padStart(2, '0');
+    let hoursVal = now.getHours();
+    let ampm = '';
+    if (!settings.clock24h) {
+        ampm = hoursVal >= 12 ? ' PM' : ' AM';
+        hoursVal = hoursVal % 12;
+        hoursVal = hoursVal ? hoursVal : 12; // 0 should be 12
+    }
+    const hours = String(hoursVal).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+    const seconds = settings.showSeconds ? ':' + String(now.getSeconds()).padStart(2, '0') : '';
+    
+    document.getElementById('clock').textContent = `${hours}:${minutes}${seconds}${ampm}`;
 
     // 다음 일정 남은 시간 계산
     updateCountdown(now);
@@ -224,7 +250,7 @@ function updateCountdown(now) {
         countdownEl.innerHTML = `
             <div class="current-event-countdown" style="margin-bottom: 20px;">
                 <span style="font-size: 2.4rem; font-weight: 600; color: var(--danger); display: block;">-${cTimeStr}</span>
-                <span style="opacity: 0.7; font-size: 0.7em; text-transform: uppercase; display: block; margin-top: 5px; letter-spacing: 1px;">ONGOING: ${currentEvent.label}</span>
+                <span style="opacity: 0.7; font-size: 0.7em; text-transform: uppercase; display: block; margin-top: 5px; letter-spacing: 1px;">NOW: ${currentEvent.label}</span>
             </div>
             <div class="next-event-countdown">
                 <span style="font-size: 1.6rem; font-weight: 400; color: var(--text-main); display: block;">-${nTimeStr}</span>
@@ -244,7 +270,7 @@ function updateCountdown(now) {
         countdownEl.innerHTML = `
             <div class="current-event-countdown">
                 <span style="font-size: 3rem; font-weight: 600; color: var(--danger); display: block;">-${cTimeStr}</span>
-                <span style="opacity: 0.7; font-size: 0.7em; text-transform: uppercase; display: block; margin-top: 5px; letter-spacing: 1px;">ONGOING: ${currentEvent.label}</span>
+                <span style="opacity: 0.7; font-size: 0.7em; text-transform: uppercase; display: block; margin-top: 5px; letter-spacing: 1px;">NOW: ${currentEvent.label}</span>
             </div>
         `;
     }
@@ -363,7 +389,7 @@ function updateTimetableUI(currentTimestamp, nextEvent, now, currentEvent) {
                 li.classList.add('ongoing');
                 
                 // 진행 중인 이벤트가 있으면 최우선으로 스크롤 타겟팅
-                if (lastScrolledEvent !== li) {
+                if (settings.autoScroll && lastScrolledEvent !== li) {
                     lastScrolledEvent = li;
                     setTimeout(() => {
                         li.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -378,7 +404,7 @@ function updateTimetableUI(currentTimestamp, nextEvent, now, currentEvent) {
                 if (li.dataset.time === nextEvent.time) {
                     li.classList.add('next');
                     
-                    if (!currentEvent && lastScrolledEvent !== li) {
+                    if (settings.autoScroll && !currentEvent && lastScrolledEvent !== li) {
                         lastScrolledEvent = li;
                         setTimeout(() => {
                             li.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -663,6 +689,225 @@ if ('serviceWorker' in navigator) {
             .then(reg => console.log('Service Worker registered successfully:', reg.scope))
             .catch(err => console.error('Service Worker registration failed:', err));
     });
+}
+
+function loadSettings() {
+    const saved = localStorage.getItem('savedSettings');
+    if (saved) {
+        try {
+            settings = { ...defaultSettings, ...JSON.parse(saved) };
+        } catch (e) {
+            console.error('설정 로드 오류:', e);
+        }
+    }
+}
+
+function saveSettings() {
+    localStorage.setItem('savedSettings', JSON.stringify(settings));
+}
+
+function applySettings() {
+    const root = document.documentElement;
+    root.style.setProperty('--bg-color', settings.bgColor);
+    root.style.setProperty('--text-main', settings.textColor);
+    root.style.setProperty('--accent', settings.accentColor);
+    root.style.setProperty('--danger', settings.dangerColor);
+    
+    root.style.setProperty('--clock-size-val', settings.clockSize);
+    root.style.setProperty('--clock-size', settings.clockSize + 'vw');
+    root.style.setProperty('--timetable-size-multiplier', settings.timetableSize);
+    
+    const timetableList = document.getElementById('timetable-list');
+    if (timetableList) {
+        if (settings.showDeleteBtn) {
+            timetableList.classList.remove('hide-delete-btn');
+        } else {
+            timetableList.classList.add('hide-delete-btn');
+        }
+    }
+    
+    syncSettingsUI();
+}
+
+function syncSettingsUI() {
+    const bgColorInput = document.getElementById('setting-bgColor');
+    const textColorInput = document.getElementById('setting-textColor');
+    const accentColorInput = document.getElementById('setting-accentColor');
+    const dangerColorInput = document.getElementById('setting-dangerColor');
+    const clock24hInput = document.getElementById('setting-clock24h');
+    const showSecondsInput = document.getElementById('setting-showSeconds');
+    const clockSizeInput = document.getElementById('setting-clockSize');
+    const showDeleteBtnInput = document.getElementById('setting-showDeleteBtn');
+    const autoScrollInput = document.getElementById('setting-autoScroll');
+    const timetableSizeInput = document.getElementById('setting-timetableSize');
+    
+    if (bgColorInput) bgColorInput.value = settings.bgColor;
+    if (textColorInput) textColorInput.value = settings.textColor;
+    if (accentColorInput) accentColorInput.value = settings.accentColor;
+    if (dangerColorInput) dangerColorInput.value = settings.dangerColor;
+    
+    if (clock24hInput) clock24hInput.checked = settings.clock24h;
+    if (showSecondsInput) showSecondsInput.checked = settings.showSeconds;
+    if (clockSizeInput) {
+        clockSizeInput.value = settings.clockSize;
+        const valClockSize = document.getElementById('val-clockSize');
+        if (valClockSize) valClockSize.textContent = settings.clockSize.toFixed(1) + 'vw';
+    }
+    
+    if (showDeleteBtnInput) showDeleteBtnInput.checked = settings.showDeleteBtn;
+    if (autoScrollInput) autoScrollInput.checked = settings.autoScroll;
+    if (timetableSizeInput) {
+        timetableSizeInput.value = settings.timetableSize;
+        const valTimetableSize = document.getElementById('val-timetableSize');
+        if (valTimetableSize) valTimetableSize.textContent = settings.timetableSize.toFixed(2) + 'x';
+    }
+}
+
+function initSettingsUI() {
+    const toggleBtn = document.getElementById('settings-toggle');
+    const closeBtn = document.getElementById('settings-close');
+    const panel = document.getElementById('settings-panel');
+    
+    if (toggleBtn && panel) {
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            panel.classList.toggle('open');
+        });
+    }
+    
+    if (closeBtn && panel) {
+        closeBtn.addEventListener('click', () => {
+            panel.classList.remove('open');
+        });
+    }
+    
+    document.addEventListener('click', (e) => {
+        if (panel && panel.classList.contains('open')) {
+            if (!panel.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
+                panel.classList.remove('open');
+            }
+        }
+    });
+    
+    const bindings = [
+        { id: 'setting-bgColor', key: 'bgColor', event: 'input' },
+        { id: 'setting-textColor', key: 'textColor', event: 'input' },
+        { id: 'setting-accentColor', key: 'accentColor', event: 'input' },
+        { id: 'setting-dangerColor', key: 'dangerColor', event: 'input' },
+        { id: 'setting-clock24h', key: 'clock24h', type: 'checkbox', event: 'change' },
+        { id: 'setting-showSeconds', key: 'showSeconds', type: 'checkbox', event: 'change' },
+        { id: 'setting-clockSize', key: 'clockSize', type: 'float', event: 'input' },
+        { id: 'setting-showDeleteBtn', key: 'showDeleteBtn', type: 'checkbox', event: 'change' },
+        { id: 'setting-autoScroll', key: 'autoScroll', type: 'checkbox', event: 'change' },
+        { id: 'setting-timetableSize', key: 'timetableSize', type: 'float', event: 'input' }
+    ];
+    
+    bindings.forEach(binding => {
+        const el = document.getElementById(binding.id);
+        if (el) {
+            el.addEventListener(binding.event, (e) => {
+                let val;
+                if (binding.type === 'checkbox') {
+                    val = e.target.checked;
+                } else if (binding.type === 'float') {
+                    val = parseFloat(e.target.value);
+                } else {
+                    val = e.target.value;
+                }
+                
+                settings[binding.key] = val;
+                saveSettings();
+                applySettings();
+            });
+        }
+    });
+    
+    const btnResetSettings = document.getElementById('btn-reset-settings');
+    if (btnResetSettings) {
+        btnResetSettings.addEventListener('click', () => {
+            if (confirm('모든 설정을 초기화하시겠습니까?')) {
+                settings = { ...defaultSettings };
+                saveSettings();
+                applySettings();
+            }
+        });
+    }
+    
+    const btnResetTimetable = document.getElementById('btn-reset-timetable');
+    if (btnResetTimetable) {
+        btnResetTimetable.addEventListener('click', () => {
+            if (confirm('저장된 시간표 데이터를 삭제하시겠습니까?')) {
+                timetable = [];
+                localStorage.removeItem('savedTimetable');
+                renderTimetable();
+                updateClock();
+                
+                const dropZoneText = document.getElementById('drop-zone-text');
+                if (dropZoneText) {
+                    dropZoneText.innerHTML = 'Drag & Drop PDF Here';
+                }
+                alert('시간표 데이터가 삭제되었습니다.');
+            }
+        });
+    }
+}
+
+// Wallpaper Engine Property Integration
+window.wallpaperPropertyListener = {
+    applyUserProperties: function(properties) {
+        if (!properties) return;
+        
+        if (properties.clock24h) {
+            settings.clock24h = properties.clock24h.value;
+        }
+        if (properties.showSeconds) {
+            settings.showSeconds = properties.showSeconds.value;
+        }
+        if (properties.accentColor) {
+            settings.accentColor = convertWEColor(properties.accentColor.value);
+        }
+        if (properties.dangerColor) {
+            settings.dangerColor = convertWEColor(properties.dangerColor.value);
+        }
+        if (properties.bgColor) {
+            settings.bgColor = convertWEColor(properties.bgColor.value);
+        }
+        if (properties.textColor) {
+            settings.textColor = convertWEColor(properties.textColor.value);
+        }
+        if (properties.clockSize) {
+            settings.clockSize = properties.clockSize.value;
+        }
+        if (properties.timetableSize) {
+            settings.timetableSize = properties.timetableSize.value;
+        }
+        if (properties.showDeleteBtn) {
+            settings.showDeleteBtn = properties.showDeleteBtn.value;
+        }
+        if (properties.autoScroll) {
+            settings.autoScroll = properties.autoScroll.value;
+        }
+        
+        saveSettings();
+        applySettings();
+    }
+};
+
+function convertWEColor(weColor) {
+    if (typeof weColor === 'string') {
+        const parts = weColor.split(' ');
+        if (parts.length === 3) {
+            const r = Math.round(parseFloat(parts[0]) * 255);
+            const g = Math.round(parseFloat(parts[1]) * 255);
+            const b = Math.round(parseFloat(parts[2]) * 255);
+            return rgbToHex(r, g, b);
+        }
+    }
+    return weColor;
+}
+
+function rgbToHex(r, g, b) {
+    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
 
 window.onload = init;
