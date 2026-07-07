@@ -280,7 +280,8 @@ body {
     .right-content {
         flex: 1;
         width: 100%;
-        max-height: calc(100% - 210px); /* 남은 세로 공간 채우기 */
+        max-height: none; /* override desktop max-height */
+        min-height: 0; /* important for flex items to shrink and not push left-content */
         display: flex;
         flex-direction: column;
     }
