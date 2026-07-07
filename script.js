@@ -250,11 +250,11 @@ function updateCountdown(now) {
         countdownEl.innerHTML = `
             <div class="current-event-countdown" style="margin-bottom: 20px;">
                 <span style="font-size: 0.8em; font-weight: 600; color: var(--danger); display: block;">-${cTimeStr}</span>
-                <span style="opacity: 0.7; font-size: 0.7em; text-transform: uppercase; display: block; margin-top: 5px; letter-spacing: 1px;">NOW: ${currentEvent.label}</span>
+                <span style="font-size: 0.7em; text-transform: uppercase; display: block; margin-top: 5px; letter-spacing: 1px; color: var(--danger);">NOW: ${currentEvent.label}</span>
             </div>
             <div class="next-event-countdown">
-                <span style="font-size: 0.53em; font-weight: 400; color: var(--text-main); display: block;">-${nTimeStr}</span>
-                <span style="opacity: 0.7; font-size: 0.7em; text-transform: uppercase; display: block; margin-top: 5px; letter-spacing: 1px;">Next: ${nextEvent.label}</span>
+                <span style="font-size: 0.53em; font-weight: 400; color: var(--accent); display: block;">-${nTimeStr}</span>
+                <span style="font-size: 0.7em; text-transform: uppercase; display: block; margin-top: 5px; letter-spacing: 1px; color: var(--accent);">Next: ${nextEvent.label}</span>
             </div>
         `;
     }
@@ -270,7 +270,7 @@ function updateCountdown(now) {
         countdownEl.innerHTML = `
             <div class="current-event-countdown">
                 <span style="font-size: 1em; font-weight: 600; color: var(--danger); display: block;">-${cTimeStr}</span>
-                <span style="opacity: 0.7; font-size: 0.7em; text-transform: uppercase; display: block; margin-top: 5px; letter-spacing: 1px;">NOW: ${currentEvent.label}</span>
+                <span style="font-size: 0.7em; text-transform: uppercase; display: block; margin-top: 5px; letter-spacing: 1px; color: var(--danger);">NOW: ${currentEvent.label}</span>
             </div>
         `;
     }
@@ -285,7 +285,7 @@ function updateCountdown(now) {
         if (h > 0 || d > 0) timeStr += `${h}h `;
         timeStr += `${m}m ${s}s`;
 
-        countdownEl.innerHTML = `-${timeStr}<span style="opacity:0.7; font-size:0.7em; text-transform:uppercase; display:block; margin-top:10px;">Next: ${nextEvent.label}</span>`;
+        countdownEl.innerHTML = `<span style="color: var(--accent);">-${timeStr}</span><span style="font-size:0.7em; text-transform:uppercase; display:block; margin-top:10px; color: var(--accent);">Next: ${nextEvent.label}</span>`;
     }
     // 케이스 4: 아무 일정도 없는 경우
     else {

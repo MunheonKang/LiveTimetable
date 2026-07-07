@@ -221,6 +221,7 @@ body {
 }
 .minimal-timetable li.event-item.next .label {
     font-weight: 600;
+    color: var(--accent);
 }
 
 /* Ongoing Event Focus with pulse animation */
@@ -241,6 +242,7 @@ body {
 }
 .minimal-timetable li.event-item.ongoing .label {
     font-weight: 600;
+    color: var(--danger);
 }
 
 /* Responsive design for Mobile/Tablet */
