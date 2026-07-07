@@ -202,50 +202,67 @@ function updateCountdown(now) {
     }
 
     const countdownEl = document.getElementById('countdown');
-    let htmlContent = '';
 
-    // 진행 중인 일정이 있는 경우
-    if (currentEvent && currentEventEndDiff !== Infinity) {
-        const h = Math.floor(currentEventEndDiff / 3600);
-        const m = Math.floor((currentEventEndDiff % 3600) / 60);
-        const s = currentEventEndDiff % 60;
-        
-        let timeStr = '';
-        if (h > 0) timeStr += `${h}h `;
-        timeStr += `${m}m ${s}s`;
-        
-        htmlContent += `<div class="current-event-countdown" style="margin-bottom: 25px;">
-            <span style="opacity:0.6; font-size:0.65em; text-transform:uppercase; display:block; margin-bottom:5px; letter-spacing: 1px;">ONGOING: ${currentEvent.label}</span>
-            <span style="font-size:2.2rem; font-weight:600; color:var(--danger); display:block; letter-spacing: -1px;">-${timeStr}</span>
-        </div>`;
+    // 케이스 1: 진행 중인 일정과 다음 일정 둘 다 있는 경우
+    if (currentEvent && currentEventEndDiff !== Infinity && nextEvent) {
+        const ch = Math.floor(currentEventEndDiff / 3600);
+        const cm = Math.floor((currentEventEndDiff % 3600) / 60);
+        const cs = currentEventEndDiff % 60;
+        let cTimeStr = '';
+        if (ch > 0) cTimeStr += `${ch}h `;
+        cTimeStr += `${cm}m ${cs}s`;
+
+        const nd = Math.floor(nextEventDiff / (24 * 3600));
+        const nh = Math.floor((nextEventDiff % (24 * 3600)) / 3600);
+        const nm = Math.floor((nextEventDiff % 3600) / 60);
+        const ns = nextEventDiff % 60;
+        let nTimeStr = '';
+        if (nd > 0) nTimeStr += `${nd}d `;
+        if (nh > 0 || nd > 0) nTimeStr += `${nh}h `;
+        nTimeStr += `${nm}m ${ns}s`;
+
+        countdownEl.innerHTML = `
+            <div class="current-event-countdown" style="margin-bottom: 20px;">
+                <span style="font-size: 1.8rem; font-weight: 600; color: var(--danger); display: block;">-${cTimeStr}</span>
+                <span style="opacity: 0.7; font-size: 0.7em; text-transform: uppercase; display: block; margin-top: 5px; letter-spacing: 1px;">ONGOING: ${currentEvent.label}</span>
+            </div>
+            <div class="next-event-countdown">
+                <span style="font-size: 1.3rem; font-weight: 400; color: var(--text-main); display: block;">-${nTimeStr}</span>
+                <span style="opacity: 0.7; font-size: 0.7em; text-transform: uppercase; display: block; margin-top: 5px; letter-spacing: 1px;">Next: ${nextEvent.label}</span>
+            </div>
+        `;
     }
+    // 케이스 2: 진행 중인 일정만 있는 경우 (다음 일정이 없음)
+    else if (currentEvent && currentEventEndDiff !== Infinity) {
+        const ch = Math.floor(currentEventEndDiff / 3600);
+        const cm = Math.floor((currentEventEndDiff % 3600) / 60);
+        const cs = currentEventEndDiff % 60;
+        let cTimeStr = '';
+        if (ch > 0) cTimeStr += `${ch}h `;
+        cTimeStr += `${cm}m ${cs}s`;
 
-    // 다음 일정이 있는 경우
-    if (nextEvent) {
+        countdownEl.innerHTML = `
+            <div class="current-event-countdown">
+                <span style="font-size: 1.8rem; font-weight: 600; color: var(--danger); display: block;">-${cTimeStr}</span>
+                <span style="opacity: 0.7; font-size: 0.7em; text-transform: uppercase; display: block; margin-top: 5px; letter-spacing: 1px;">ONGOING: ${currentEvent.label}</span>
+            </div>
+        `;
+    }
+    // 케이스 3: 다음 일정만 있는 경우 (기존과 100% 동일하게 렌더링)
+    else if (nextEvent) {
         const d = Math.floor(nextEventDiff / (24 * 3600));
         const h = Math.floor((nextEventDiff % (24 * 3600)) / 3600);
         const m = Math.floor((nextEventDiff % 3600) / 60);
         const s = nextEventDiff % 60;
-        
         let timeStr = '';
         if (d > 0) timeStr += `${d}d `;
         if (h > 0 || d > 0) timeStr += `${h}h `;
         timeStr += `${m}m ${s}s`;
-        
-        // 진행 중인 일정이 있는 경우 폰트 크기 및 간격을 약간 축소하여 밸런스 유지
-        const nextFontSize = currentEvent ? '1.4rem' : '2.2rem';
-        const nextLetterSpacing = currentEvent ? '0px' : '-1px';
-        const labelSize = currentEvent ? '0.6em' : '0.65em';
-        
-        htmlContent += `<div class="next-event-countdown">
-            <span style="opacity:0.6; font-size:${labelSize}; text-transform:uppercase; display:block; margin-bottom:5px; letter-spacing: 1px;">NEXT: ${nextEvent.label}</span>
-            <span style="font-size:${nextFontSize}; font-weight:600; display:block; color:var(--text-main); letter-spacing: ${nextLetterSpacing};">-${timeStr}</span>
-        </div>`;
-    }
 
-    countdownEl.innerHTML = htmlContent;
-    
-    if (!currentEvent && !nextEvent) {
+        countdownEl.innerHTML = `-${timeStr}<span style="opacity:0.7; font-size:0.7em; text-transform:uppercase; display:block; margin-top:10px;">Next: ${nextEvent.label}</span>`;
+    }
+    // 케이스 4: 아무 일정도 없는 경우
+    else {
         countdownEl.innerHTML = '<span style="opacity:0.5; font-size:0.9rem; text-transform:uppercase; letter-spacing: 2px;">대기 중인 일정이 없습니다.</span>';
     }
     
