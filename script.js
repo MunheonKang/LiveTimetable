@@ -239,7 +239,7 @@ function updateCountdown(now) {
         
         htmlContent += `<div class="next-event-countdown">
             <span style="opacity:0.6; font-size:${labelSize}; text-transform:uppercase; display:block; margin-bottom:5px; letter-spacing: 1px;">NEXT: ${nextEvent.label}</span>
-            <span style="font-size:${nextFontSize}; font-weight:600; display:block; color:var(--accent); letter-spacing: ${nextLetterSpacing};">-${timeStr}</span>
+            <span style="font-size:${nextFontSize}; font-weight:600; display:block; color:var(--text-main); letter-spacing: ${nextLetterSpacing};">-${timeStr}</span>
         </div>`;
     }
 
