@@ -89,7 +89,7 @@ body {
 }
 
 #countdown {
-    font-size: 1.8rem;
+    font-size: 3rem;
     font-weight: 300;
     color: var(--text-main);
     letter-spacing: 1px;
@@ -272,7 +272,7 @@ body {
     }
     
     #countdown {
-        font-size: 1.2rem;
+        font-size: 2rem;
     }
     
     .right-content {

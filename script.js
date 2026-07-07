@@ -223,11 +223,11 @@ function updateCountdown(now) {
 
         countdownEl.innerHTML = `
             <div class="current-event-countdown" style="margin-bottom: 20px;">
-                <span style="font-size: 1.8rem; font-weight: 600; color: var(--danger); display: block;">-${cTimeStr}</span>
+                <span style="font-size: 2.4rem; font-weight: 600; color: var(--danger); display: block;">-${cTimeStr}</span>
                 <span style="opacity: 0.7; font-size: 0.7em; text-transform: uppercase; display: block; margin-top: 5px; letter-spacing: 1px;">ONGOING: ${currentEvent.label}</span>
             </div>
             <div class="next-event-countdown">
-                <span style="font-size: 1.3rem; font-weight: 400; color: var(--text-main); display: block;">-${nTimeStr}</span>
+                <span style="font-size: 1.6rem; font-weight: 400; color: var(--text-main); display: block;">-${nTimeStr}</span>
                 <span style="opacity: 0.7; font-size: 0.7em; text-transform: uppercase; display: block; margin-top: 5px; letter-spacing: 1px;">Next: ${nextEvent.label}</span>
             </div>
         `;
@@ -243,7 +243,7 @@ function updateCountdown(now) {
 
         countdownEl.innerHTML = `
             <div class="current-event-countdown">
-                <span style="font-size: 1.8rem; font-weight: 600; color: var(--danger); display: block;">-${cTimeStr}</span>
+                <span style="font-size: 3rem; font-weight: 600; color: var(--danger); display: block;">-${cTimeStr}</span>
                 <span style="opacity: 0.7; font-size: 0.7em; text-transform: uppercase; display: block; margin-top: 5px; letter-spacing: 1px;">ONGOING: ${currentEvent.label}</span>
             </div>
         `;
