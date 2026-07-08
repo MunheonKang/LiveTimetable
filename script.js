@@ -1,9 +1,9 @@
 // 초기 타임테이블 데이터 (비어 있음)
 let timetable = [];
 
-let lastPdfVersion = '';
-let lastTxtVersion = '';
-let lastLoadedSource = ''; // 'pdf' or 'txt'
+let lastPdfVersion = localStorage.getItem('lastPdfVersion') || '';
+let lastTxtVersion = localStorage.getItem('lastTxtVersion') || '';
+let lastLoadedSource = localStorage.getItem('lastLoadedSource') || ''; // 'pdf' or 'txt'
 
 const defaultSettings = {
     clock24h: true,
@@ -70,6 +70,9 @@ async function checkServerUpdates() {
             lastTxtVersion = txtVersion;
             lastPdfVersion = pdfVersion;
             lastLoadedSource = sourceToLoad;
+            localStorage.setItem('lastTxtVersion', lastTxtVersion);
+            localStorage.setItem('lastPdfVersion', lastPdfVersion);
+            localStorage.setItem('lastLoadedSource', lastLoadedSource);
 
             if (sourceToLoad === 'txt') {
                 console.log("schedule.txt 로드 중 (더 최신이거나 유일한 소스)...");
@@ -839,6 +842,12 @@ function initSettingsUI() {
             if (confirm('저장된 시간표 데이터를 삭제하시겠습니까?')) {
                 timetable = [];
                 localStorage.removeItem('savedTimetable');
+                localStorage.removeItem('lastTxtVersion');
+                localStorage.removeItem('lastPdfVersion');
+                localStorage.removeItem('lastLoadedSource');
+                lastTxtVersion = '';
+                lastPdfVersion = '';
+                lastLoadedSource = '';
                 renderTimetable();
                 updateClock();
                 
