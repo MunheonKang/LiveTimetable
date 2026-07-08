@@ -37,8 +37,8 @@ async function checkServerUpdates() {
             return;
         }
 
-        const txtVersion = hasTxt ? (txtHead.headers.get('ETag') || txtHead.headers.get('Last-Modified')) : '';
-        const pdfVersion = hasPdf ? (pdfHead.headers.get('ETag') || pdfHead.headers.get('Last-Modified')) : '';
+        const txtVersion = hasTxt ? (txtHead.headers.get('ETag') || txtHead.headers.get('Last-Modified') || 'unknown') : '';
+        const pdfVersion = hasPdf ? (pdfHead.headers.get('ETag') || pdfHead.headers.get('Last-Modified') || 'unknown') : '';
 
         // 수정 시간 비교용 날짜 변환
         const txtMtime = hasTxt ? new Date(txtHead.headers.get('Last-Modified') || 0).getTime() : 0;
