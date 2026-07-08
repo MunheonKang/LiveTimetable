@@ -45,7 +45,7 @@ self.addEventListener('fetch', (e) => {
         fetch(e.request)
             .then((response) => {
                 // If it's a valid response, cache it
-                if (response && response.status === 200) {
+                if (response && response.status === 200 && e.request.url.startsWith('http')) {
                     const responseClone = response.clone();
                     caches.open(CACHE_NAME).then((cache) => {
                         cache.put(e.request, responseClone);
