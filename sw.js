@@ -1,4 +1,4 @@
-const CACHE_NAME = 'live-timetable-v1';
+const CACHE_NAME = 'live-timetable-v2';
 const ASSETS = [
     './',
     './index.html',
