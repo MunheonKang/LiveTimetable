@@ -1,30 +1,43 @@
-[운영팀 전용] F06-26 스케줄 (태백 스피드웨이)
-■ DAY 1 : 7 월 6 일 (월) - 피팅 및 기초 데이터 확보
-시간 프로그램명 운영팀 주요 작업 및 체크리스트
-13:30 - 14:00 시트 재점검 (Fitting) ㆍ포뮬러카 시트 패드 및 6 점식 벨트 상태 점검
-ㆍ참가자 페달 답력(브레이크 한계 압력) 확인 지원
-14:00 - 14:30 패독 몸풀기 (Dry Run) ㆍ피지컬 스트레칭 공간 확보
-ㆍ참가자 헬멧, 한스(HANS), 슈트 등 안전 장비 최종 검차
-15:50 - 16:10 [주행 1] 서킷 주행 1 (20 분) ㆍ피트 아웃 통제 및 코스인 유도
-ㆍ무전 상태 및 서킷 로컬 포스트 상황 실시간 모니터링
-16:10 - 17:20 1 차 데이터 피드백 ㆍ[차량 정비] 피트인 즉시 텔레메트리 데이터(로그) 및 인캠 영상 추출
-ㆍ피드백 룸 세팅 (모니터, 데이터 오버랩 준비)
-ㆍ메카닉 팀: 차량 수온, 유압, 타이어 마모도 및 공기압 체크
-17:10 - 17:30 [주행 2] 서킷 주행 2 (20 분) ㆍ코스인/아웃 통제
-ㆍ Day 1 주행 종료 후 차량 전체 메인티넌스 및 야간 보관 준비
-■ DAY 2 : 7 월 7 일 (화) - 섹터 공략 및 타임 어택 운영
-시간 프로그램명 운영팀 주요 작업 및 체크리스트
-11:00 - 11:20 [주행 3] 서킷 주행 3 (20 분) ㆍ오전 코스 상태 확인 후 유도
-ㆍ종료 후 점심 식사 케어 및 데이터 분석 공간 지원
-13:00 - 13:20 [주행 4] 서킷 주행 4 (20 분) ㆍ노면 온도 체크 (하루 중 가장 높음)
-ㆍ피트인 즉시 인캠 영상 다운로드 및 간이 피드백 준비
-14:30 - 16:50 open gate
-■ DAY 3 : 7 월 8 일 (수) - 40 분 롱런 및 풀 레이스 대응
-※ 주의: 주행 8(13:00~13:40)은 40 분 연속 주행으로, 운영팀의 철저한 사전 준비와 피트 스톱 스탠바이가 필요합니다.
-시간 프로그램명 운영팀 주요 작업 및 체크리스트
-11:00 - 11:20 서킷 주행 (20 분)
-11:40 - 12:00 서킷 주행 (20 분)
-12:50 - 13:30 서킷 주행 (40 분)
-14:00 - 14:20 서킷 주행 (20 분)
-14:30 - 14:50 서킷 주행 (20 분)
-15:00 ~ 디브리핑 및 철수 ㆍ포뮬러카 상차 및 현장 장비 패킹 철수 작업
+/25
+6
+0
+# 6/
+11a 202
+TEAM INFORMATION
+LSTA 2026 Team information #11a
+Subject: Round 4 Inje South Korea Updated Provisional Schedule
+Dear Teams,
+For your information, below is the updated provisional schedule for Round 4 in Inje South Korea.
+We are looking forward to seeing you all at the circuit.
+Wednesday 15 July 2026
+09:00 Garages available for teams
+09:30-17:00 Sign in/Registration (At LSTA Office)
+09:30-17:00 Preliminary Scrutineering (In Pit Garages)
+15:00-16:00 Team Manager Meeting (In Hospitality)
+15:00-17:00 Tyre scanning for Paid Test & Free Practice (in Pit Garages)
+Thursday 16 July 2026
+09:30-11:30 Sign in/Registration (at LSTA Office)
+09:30-11:30 Preliminary Scrutineering (in Pit Garages)
+11:30-12:00 Mandatory Drivers’ Briefing
+13:00-14:00 Unofficial Paid Practice
+14:45-15:45 Official Practice 1
+16:30-17:30 Official Practice 2
+18:00-19:00 Track Walk
+17:30-19:00 Tyre scanning for Qualifying & Races (at Hankook Tyre Service Tent)
+Friday 17 July 2026
+10:50-11:05 Qualifying 1
+11:15-11:30 Qualifying 2
+15:30-15:35 Pit Lane Exit Open
+15:45-16:45 Race 1 (50 minutes + Leader)
+Saturday 18 July 2026
+09:50-10:35 Hot Laps
+14:25-14:30 Pit Lane Exit Open
+14:40-15:40 Race 2 (50 minutes + Leader)
+Kind regards,
+Lamborghini Super Trofeo Asia Series Coordinator
+Automobili Lamborghini S.p.A
+Squadra Corse
+Via Modena, 12
+40019 Sant’Agata Bolognese
+
+
