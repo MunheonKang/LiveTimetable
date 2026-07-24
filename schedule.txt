@@ -1,41 +1,45 @@
-/25
-6
+4
+/2
+7
 0
 # 6/
-11a 202
+16 202
 TEAM INFORMATION
-LSTA 2026 Team information #11a
-Subject: Round 4 Inje South Korea Updated Provisional Schedule
+LSTA 2026 Team information #16
+Subject: Round 5 Shanghai China Provisional Schedule
 Dear Teams,
-For your information, below is the updated provisional schedule for Round 4 in Inje South Korea.
-We are looking forward to seeing you all at the circuit.
-Wednesday 15 July 2026
+For your information, below is the provisional schedule for Round 5 in Shanghai China.
+Wednesday 02 September 2026
 09:00 Garages available for teams
-09:30-17:00 Sign in/Registration (At LSTA Office)
-09:30-17:00 Preliminary Scrutineering (In Pit Garages)
-15:00-16:00 Team Manager Meeting (In Hospitality)
+15:00-16:00 Team Manager Meeting (In LSTA VIP Hospitality)
 15:00-17:00 Tyre scanning for Paid Test & Free Practice (in Pit Garages)
-Thursday 16 July 2026
-09:30-11:30 Sign in/Registration (at LSTA Office)
-09:30-11:30 Preliminary Scrutineering (in Pit Garages)
-11:30-12:00 Mandatory Drivers’ Briefing
+Thursday 03 September 2026
+08:30-17:00 Sign in/Registration (at LSTA Office)
+08:30-17:00 Preliminary Scrutineering (in Pit Garages)
+09:40-10:40 Unofficial Paid Practice
 13:00-14:00 Unofficial Paid Practice
-14:45-15:45 Official Practice 1
-16:30-17:30 Official Practice 2
-18:00-19:00 Track Walk
+17:20-18:10 Track Walk
 17:30-19:00 Tyre scanning for Qualifying & Races (at Hankook Tyre Service Tent)
-Friday 17 July 2026
-10:50-11:05 Qualifying 1
-11:15-11:30 Qualifying 2
-15:30-15:35 Pit Lane Exit Open
-15:45-16:45 Race 1 (50 minutes + Leader)
-Saturday 18 July 2026
-09:50-10:35 Hot Laps
-14:25-14:30 Pit Lane Exit Open
-14:40-15:40 Race 2 (50 minutes + Leader)
+Friday 04 September 2026
+08:30-09:30 Sign in/Registration (at LSTA Office)
+08:30-09:30 Preliminary Scrutineering (in Pit Garages)
+09:30-10:00 Mandatory Drivers’ Briefing
+10:40-11:40 Official Practice 1
+15:30-16:30 Official Practice 2
+Saturday 05 September 2026
+10:20-10:35 Qualifying 1
+10:45-11:00 Qualifying 2
+12:00-13:00 Hot Laps
+14:40-14:45 Pit Lane Exit Open
+14:55-15:55 Race 1 (50 minutes + Leader)
+Sunday 06 September 2026
+10:40-10:45 Pit Lane Exit Open
+10:55-11:55 Race 2 (50 minutes + Leader)
 Kind regards,
 Lamborghini Super Trofeo Asia Series Coordinator
 Automobili Lamborghini S.p.A
+
+
 Squadra Corse
 Via Modena, 12
 40019 Sant’Agata Bolognese
